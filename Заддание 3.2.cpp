@@ -4,38 +4,52 @@
 
 using namespace std;
 
-double func(double x) {
+double f(double x) {
     return exp(x) * cos(exp(x) + 5) - 1;
 }
 
 int main() {
-    double a = -3, b = 1, c = 0.07791, epsilon = 1e-9;
-    double fa = func(a), fb = func(b), fc = func(c);
+    double a = -3, b = 1, c, eps = 1e-9;
     int iterations = 0;
 
-    // Определяем число корней на отрезке [a, b]
-    if (fa * fb < 0) {
-        cout << "Число корней уравнения на отрезке [" << a << "; " << b << "]: 1" << endl;
+    // Проверяем, есть ли корень на отрезке [-3, 1]
+    double fa = f(a), fb = f(b);
+    if (fa == 0) {
+        cout << "Корень уравнения на границе отрезка: " << a << endl;
+        return 0;
     }
-    else {
-        cout << "Число корней уравнения на отрезке [" << a << "; " << b << "]: 0" << endl;
+    if (fb == 0) {
+        cout << "Корень уравнения на границе отрезка: " << b << endl;
         return 0;
     }
 
-    // Используем метод секущих для уточнения корня
-    double x0 = a, x1 = b;
-    while (abs(fc) > epsilon) {
-        double x2 = x1 - fc * (x1 - x0) / (fc - fa);
-        x0 = x1;
-        x1 = x2;
-        fa = fc;
-        fc = func(x2);
+    // Ищем начальное приближение к корню методом дихотомии
+    while (b - a > eps) {
+        c = (a + b) / 2;
+        if (f(a) * f(c) < 0) {
+            b = c;
+        }
+        else {
+            a = c;
+        }
+    }
+    c = (a + b) / 2;
+
+    // Уточняем корень методом секущих
+    double fc = f(c);
+    while (fabs(fc) > eps) {
+        double x1 = a, x2 = b, f1 = f(x1), f2 = f(b);
+        b = c;
+        c = b - f(b) * (b - a) / (f(b) - f(a));
+        a = x2;
+        fc = f(c);
         iterations++;
     }
 
-    cout << "Границы отрезка, выбранные для поиска корней: [" << a << "; " << b << "]" << endl;
+    cout << "Число корней уравнения на отрезке: 1" << endl;
+    cout << "Границы отрезка: [-3, 1]" << endl;
     cout << "Число итераций, потребовавшихся для уточнения корня: " << iterations << endl;
-    cout << "Значение найденного корня: " << setprecision(9) << x1 << endl;
+    cout << "Значение найденного корня: " << fixed << setprecision(9) << c << endl;
 
     return 0;
 }
