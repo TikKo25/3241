@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -14,7 +14,7 @@ int getDaysBetweenDates(int day1, int month1, int year1, int day2, int month2, i
 }
 
 bool getDate(int& day, int& month, int& year) {
-    cout << "Enter data ÄÄ-ÌÌ-ÃÃÃÃ: ";
+    cout << "Enter data Ã„Ã„-ÃŒÃŒ-ÃƒÃƒÃƒÃƒ: ";
     string input;
     getline(cin, input);
 
@@ -69,7 +69,7 @@ int main() {
     }
 
     int daysBetween = getDaysBetweenDates(day1, month1, year1, day2, month2, year2);
-    cout << "Count of days " << day1 << "-" << month1 << "-" << year1 << " è " << day2 << "-" << month2 << "-" << year2 << " : " << daysBetween << endl;
+    cout << "Count of days " << day1 << "-" << month1 << "-" << year1 << " Ã¨ " << day2 << "-" << month2 << "-" << year2 << " : " << daysBetween << endl;
 
     return 0;
 }
