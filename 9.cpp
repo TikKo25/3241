@@ -1,145 +1,123 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <tuple>
-#include <fstream>
 #include <stdexcept>
+#include <string>
 
-template<typename T>
+template <typename T>
 class SparseMatrix {
 public:
-    SparseMatrix(size_t rows, size_t cols) : rows(rows), cols(cols) {}
+    SparseMatrix(size_t rows, size_t cols) : rows_(rows), cols_(cols) {}
 
-    void set(size_t r, size_t c, T value) {
-        if (r >= rows || c >= cols) {
-            throw std::out_of_range("Index out of bounds");
-        }
-        if (value != T()) {
-            data.emplace_back(r, c, value);
+    void insert(size_t r, size_t c, T value) {
+        if (value != 0) {
+            elements_.emplace_back(r, c, value);
         }
     }
 
     T get(size_t r, size_t c) const {
-        if (r >= rows || c >= cols) {
-            throw std::out_of_range("Index out of bounds");
+        if (r >= rows_ || c >= cols_) {
+            throw std::out_of_range("Index out of range");
         }
-        for (const auto& element : data) {
-            if (std::get<0>(element) == r && std::get<1>(element) == c) {
-                return std::get<2>(element);
+        for (size_t i = 0; i < elements_.size(); ++i) {
+            if (std::get<0>(elements_[i]) == r && std::get<1>(elements_[i]) == c) {
+                return std::get<2>(elements_[i]);
             }
         }
-        return T(); // Возврат нулевого значения, если элемент не найден
+        return T();
     }
 
-    std::tuple<T, size_t, size_t> findMin() const {
-        if (data.empty()) {
-            throw std::runtime_error("Matrix is empty");
+    std::tuple<T, std::tuple<size_t, size_t>, T, std::tuple<size_t, size_t>> minMax() const {
+        if (elements_.empty()) {
+            throw std::runtime_error("Matrix has no elements");
         }
 
-        size_t minRow = std::get<0>(data[0]);
-        size_t minCol = std::get<1>(data[0]);
-        T minValue = std::get<2>(data[0]);
+        T minValue = std::get<2>(elements_[0]);
+        T maxValue = std::get<2>(elements_[0]);
+        std::tuple<size_t, size_t> minIndex = { std::get<0>(elements_[0]), std::get<1>(elements_[0]) };
+        std::tuple<size_t, size_t> maxIndex = { std::get<0>(elements_[0]), std::get<1>(elements_[0]) };
 
-        for (size_t i = 1; i < data.size(); ++i) {
-            size_t row = std::get<0>(data[i]);
-            size_t col = std::get<1>(data[i]);
-            T value = std::get<2>(data[i]);
+        for (size_t i = 1; i < elements_.size(); ++i) {
+            const T value = std::get<2>(elements_[i]);
+            const size_t r = std::get<0>(elements_[i]);
+            const size_t c = std::get<1>(elements_[i]);
 
             if (value < minValue) {
                 minValue = value;
-                minRow = row;
-                minCol = col;
+                minIndex = { r, c };
             }
-        }
-
-        return std::make_tuple(minValue, minRow, minCol);
-    }
-
-    std::tuple<T, size_t, size_t> findMax() const {
-        if (data.empty()) {
-            throw std::runtime_error("Matrix is empty");
-        }
-
-        size_t maxRow = std::get<0>(data[0]);
-        size_t maxCol = std::get<1>(data[0]);
-        T maxValue = std::get<2>(data[0]);
-
-        for (size_t i = 1; i < data.size(); ++i) {
-            size_t row = std::get<0>(data[i]);
-            size_t col = std::get<1>(data[i]);
-            T value = std::get<2>(data[i]);
-
             if (value > maxValue) {
                 maxValue = value;
-                maxRow = row;
-                maxCol = col;
+                maxIndex = { r, c };
             }
         }
-
-        return std::make_tuple(maxValue, maxRow, maxCol);
+        return { minValue, minIndex, maxValue, maxIndex }; 
     }
 
-    void loadFromFile(const std::string& filename) {
-        std::ifstream file(filename);
-        if (!file) {
-            throw std::runtime_error("Unable to open file");
-        }
-
-        size_t r, c;
-        T value;
-        while (file >> r >> c >> value) {
-            set(r, c, value);
-        }
-
-        file.close();
-    }
-
-    void saveToFile(const std::string& filename) const {
-        std::ofstream file(filename);
-        if (!file) {
-            throw std::runtime_error("Unable to open file");
-        }
-
-        for (const auto& element : data) {
-            file << std::get<0>(element) << " " << std::get<1>(element) << " " << std::get<2>(element) << "\n";
-        }
-
-        file.close();
-    }
+    size_t rows() const { return rows_; }
+    size_t cols() const { return cols_; }
 
 private:
-    size_t rows;
-    size_t cols;
-    std::vector<std::tuple<size_t, size_t, T>> data;
+    size_t rows_, cols_;
+    std::vector<std::tuple<size_t, size_t, T>> elements_;
 };
 
+template <typename T>
+SparseMatrix<T> readMatrixFromFile(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file) {
+        throw std::runtime_error("Could not open file");
+    }
+
+    size_t rows, cols;
+    file >> rows >> cols;
+
+    SparseMatrix<T> matrix(rows, cols);
+    size_t r, c;
+    T value;
+
+    while (file >> r >> c >> value) {
+        matrix.insert(r, c, value);
+    }
+
+    return matrix;
+}
+
+template <typename T>
+void writeResultToFile(const std::string& filename, T minValue, std::tuple<size_t, size_t> minIndex,
+    T maxValue, std::tuple<size_t, size_t> maxIndex) {
+    std::ofstream file(filename);
+    if (!file) {
+        throw std::runtime_error("Could not open file for writing");
+    }
+
+    file << "Min Value: " << minValue << " at ("
+        << std::get<0>(minIndex) << ", " << std::get<1>(minIndex) << ")\n";
+    file << "Max Value: " << maxValue << " at ("
+        << std::get<0>(maxIndex) << ", " << std::get<1>(maxIndex) << ")\n";
+}
+
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <input_file> <output_file>\n";
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <input_file> <output_file>" << std::endl;
         return 1;
     }
 
-    const std::string inputFile = argv[1];
-    const std::string outputFile = argv[2];
-
     try {
-            SparseMatrix<int> matrix(10, 10); 
-        matrix.loadFromFile(inputFile);
-        std::tuple<int, size_t, size_t> minResult = matrix.findMin();
-        int minValue = std::get<0>(minResult);
-        size_t minRow = std::get<1>(minResult);
-        size_t minCol = std::get<2>(minResult);
-        std::cout << "Min value: " << minValue << " at (" << minRow << ", " << minCol << ")\n";
+            SparseMatrix<int> matrix = readMatrixFromFile<int>(argv[1]);
+        int minValue; 
+        std::tuple<size_t, size_t> minIndex;
+        int maxValue; 
+        std::tuple<size_t, size_t> maxIndex;
 
-        std::tuple<int, size_t, size_t> maxResult = matrix.findMax();
-        int maxValue = std::get<0>(maxResult);
-        size_t maxRow = std::get<1>(maxResult);
-        size_t maxCol = std::get<2>(maxResult);
-        std::cout << "Max value: " << maxValue << " at (" << maxRow << ", " << maxCol << ")\n";
+        std::tie(minValue, minIndex, maxValue, maxIndex) = matrix.minMax();
 
-        matrix.saveToFile(outputFile);
+        writeResultToFile(argv[2], minValue, minIndex, maxValue, maxIndex);
+
     }
     catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << '\n';
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 
