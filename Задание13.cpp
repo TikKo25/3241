@@ -22,9 +22,16 @@ void printGroup(const vector<student_data>& group) {
 
 int main() {
     vector<student_data> group = {
-        { "Tikhon", "Grib",     1, 8434562, {4.92, 12} },
-        { "Valentine", "Brat", 0, 6349523, {4.81, 13} },
-        { "Dimon", "Gantelya",  1, 2456246, {4.55, 8}  }
+        { "Tikhon", "Kozich",     1, 8434562, {4.92, 12} },
+        { "Valentine", "Bratkova", 0, 6349523, {4.81, 13} },
+        { "Dmitryi", "Gantelyv",  1, 2456246, {4.55, 8}  },
+        { "Gleb", "Koshkarov", 1, 2837491, {4.72, 11} },
+        { "Danil", "Swollow" , 1, 4567367, {4.92, 13} },
+        { "Irina", "Borrov" , 0, 7836411, {3.97, 10} },
+        { "Julia", "Ivanova", 0 , 4563367, {4.8, 13} },
+        { "Elena", "Kostromskih", 0, 1989929, {4.0, 10} },
+        { "Ilya", "Malyshko", 1, 9873674, {5.0, 10} },
+        { "Elina", "Starostovskya", 0, 5485555, {4.9, 12} }
     };
 
     printGroup(group);
